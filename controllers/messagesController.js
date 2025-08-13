@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
 
 // Authenticated user client — scoped to token
 export const getUserScopedClient = (token) =>
-  createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+  createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
     global: {
       headers: {
         Authorization: `Bearer ${token}`,

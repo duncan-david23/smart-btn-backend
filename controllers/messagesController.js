@@ -147,3 +147,53 @@ export const markMessageAsRead = async (req, res) => {
 
 
 
+// Function to delete a message 
+export const deleteMessage = async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  const { messageId } = req.params;
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Missing token" });
+  }
+
+  const supabaseUser = getUserScopedClient(token);
+
+  try {
+    // Verify authenticated user
+    const { data: authUser, error: authError } = await supabaseUser.auth.getUser();
+
+    if (authError || !authUser) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+        error: authError?.message,
+      });
+    }
+
+    const publicKey = authUser.user.id;
+
+    // Perform delete
+    const { data, error } = await supabaseAdmin
+      .from("messages")
+      .delete()
+      .eq("id", messageId)
+      .eq("public_key", publicKey)
+      .select(); // Optional: returns deleted row(s)
+
+    if (error || !data || data.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "Delete failed or unauthorized",
+        error: error?.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+      data,
+    });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
